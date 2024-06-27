@@ -1,0 +1,273 @@
+openapi: 3.0.0
+info:
+  title: Loan Microservice
+  description: Loan Microservice for managing credits
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+    description: SwaggerHub API Auto Mocking
+paths:
+  /credits:
+    post:
+      tags:
+        - credit
+      summary: Add a new credit to the database
+      description: Add a new credit to the database
+      operationId: addCredit
+      requestBody:
+        description: Create a new credit in the database
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Credit'
+        required: true
+      responses:
+        "201":
+          description: Credit created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Credit'
+        "405":
+          description: Invalid input
+    get:
+      tags:
+        - credit
+      summary: Get all credits
+      description: Retrieve a list of all credits
+      operationId: getCredits
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Credit'
+  /credits/{id}:
+    get:
+      tags:
+        - credit
+      summary: Find credit by ID
+      description: Returns a single credit
+      operationId: getCreditById
+      parameters:
+        - name: id
+          in: path
+          description: ID of credit to return
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Credit'
+        "400":
+          description: Invalid ID supplied
+        "404":
+          description: Credit not found
+  /credits/{id}/payment:
+    post:
+      tags:
+        - transaction
+      summary: Make a payment to a credit
+      description: Make a payment to a credit
+      operationId: makeCreditPayment
+      parameters:
+        - name: id
+          in: path
+          description: ID of credit to make a payment to
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Payment details
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  type: number
+                  format: double
+                  description: Amount to pay
+                description:
+                  type: string
+                  description: Description of the payment
+        required: true
+      responses:
+        "200":
+          description: Payment successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+  /credits/{id}/charge:
+    post:
+      tags:
+        - transaction
+      summary: Make a charge to a credit
+      description: Make a charge to a credit
+      operationId: makeCreditCharge
+      parameters:
+        - name: id
+          in: path
+          description: ID of credit to charge to
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Charge details
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  type: number
+                  format: double
+                  description: Amount to charge
+                description:
+                  type: string
+                  description: Description of the charge
+        required: true
+      responses:
+        "200":
+          description: Charge successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+  /credits/{id}/balance:
+    get:
+      tags:
+        - credit
+      summary: Get credit balance
+      description: Retrieve the balance of a credit
+      operationId: getCreditBalance
+      parameters:
+        - name: id
+          in: path
+          description: ID of credit to retrieve balance
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  balance:
+                    type: number
+                    format: double
+                    example: 300.00
+        "404":
+          description: Credit not found
+  /credits/{id}/transactions:
+    get:
+      tags:
+        - transaction
+      summary: Get credit transactions
+      description: Retrieve transactions of a credit
+      operationId: getCreditTransactions
+      parameters:
+        - name: id
+          in: path
+          description: ID of credit to retrieve transactions
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Transaction'
+        "404":
+          description: Credit not found
+components:
+  schemas:
+    Credit:
+      type: object
+      required:
+        - customerId
+        - creditType
+        - creditLimit
+        - balance
+        - interestRate
+        - dueDate
+      properties:
+        id:
+          type: string
+          readOnly: true
+        customerId:
+          type: string
+          description: ID of the customer who owns the credit
+        creditType:
+          type: string
+          description: Type of the credit (e.g., personal loan, mortgage)
+        creditLimit:
+          type: number
+          format: double
+          description: Limit of the credit
+        balance:
+          type: number
+          format: double
+          description: Current balance of the credit
+        interestRate:
+          type: number
+          format: double
+          description: Interest rate of the credit
+        dueDate:
+          type: string
+          format: date
+          description: Due date for the credit
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation date
+          example: "2024-06-25T20:30:00Z"
+          readOnly: true
+      xml:
+        name: credit
+    Transaction:
+      type: object
+      required:
+        - creditId
+        - amount
+        - date
+        - type
+        - description
+      properties:
+        id:
+          type: string
+          readOnly: true
+        creditId:
+          type: string
+          description: ID of the credit associated with the transaction
+        amount:
+          type: number
+          format: double
+          description: Amount of the transaction
+        date:
+          type: string
+          format: date-time
+          description: Date and time of the transaction
+        type:
+          type: string
+          description: Type of the transaction (e.g., payment, charge)
+        description:
+          type: string
+          description: Description of the transaction
+      xml:
+        name: transaction

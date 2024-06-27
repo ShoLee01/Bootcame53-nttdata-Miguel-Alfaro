@@ -1,0 +1,198 @@
+openapi: 3.0.0
+info:
+  title: Customer Microservice
+  description: Customer Microservice
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+    description: SwaggerHub API Auto Mocking
+paths:
+  /customers:
+    post:
+      tags:
+        - customer
+      summary: Add a new customer to the database
+      description: Add a new customer to the database
+      operationId: addCustomer
+      requestBody:
+        description: Create a new customer in the database
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Customer'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/Customer'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Customer'
+        required: true
+      responses:
+        "201":
+          description: created successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Response'
+        "405":
+          description: Invalid input
+  /customers/{id}:
+    put:
+      tags:
+        - customer
+      summary: Update an existing customer
+      description: Update an existing customer by Id
+      operationId: updateCustomer
+      parameters:
+        - name: id
+          in: path
+          description: ID of customer to update
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Update an existent customer in the database
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Customer'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/Customer'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Customer'
+        required: true
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Response'
+        "400":
+          description: Invalid ID supplied
+        "404":
+          description: Customer not found
+        "405":
+          description: Validation exception
+    get:
+      tags:
+        - customer
+      summary: Find customer by ID
+      description: Returns a single customer
+      operationId: getCustomerById
+      parameters:
+        - name: id
+          in: path
+          description: ID of customer to return
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        "400":
+          description: Invalid ID supplied
+        "404":
+          description: Customer not found
+    delete:
+      tags:
+        - customer
+      summary: Delete a customer
+      description: delete a customer
+      operationId: deleteCustomer
+      parameters:
+        - name: id
+          in: path
+          description: Customer id to delete
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: delete successful
+        "400":
+          description: Invalid customer value
+components:
+  schemas:
+    Response:
+      type: object
+      additionalProperties:
+        type: object
+    Customer:
+      required:
+        - names
+        - surnames
+        - type
+        - email
+        - phone
+        - address
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        names:
+          type: string
+          description: Names
+          pattern: '^(?=.{3,15}$)[A-ZÁÉÍÓÚ][a-zñáéíóú]+(?: [A-ZÁÉÍÓÚ][a-zñáéíóú]+)?$'
+          example: Miguel Angel
+        surnames:
+          type: string
+          description: Surnames
+          pattern: '^(?=.{3,15}$)[A-ZÁÉÍÓÚ][a-zñáéíóú]+(?: [A-ZÁÉÍÓÚ][a-zñáéíóú]+)?$'
+          example: Alfaro Gonzales
+        type:
+          type: string
+          description: Customer type
+          example: personal
+        email:
+          type: string
+          description: email
+          pattern: '[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$'
+          example: miguelalfaro2017@gmail.com
+        phone:
+          type: string
+          description: Phone
+          pattern: '(\+51|51|)[0-9]+'
+          example: "+51940000000"
+        address:
+          type: string
+          description: Address
+          example: "123 Main St, Springfield, IL 62704"
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation date
+          example: "2024-06-25T20:30:00Z"
+          readOnly: true
+      xml:
+        name: customer
+  requestBodies:
+    customer:
+      description: customer object that needs to be added to the database
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Customer'
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/Customer'

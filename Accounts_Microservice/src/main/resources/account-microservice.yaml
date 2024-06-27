@@ -1,0 +1,322 @@
+openapi: 3.0.0
+info:
+  title: Account Microservice
+  description: Account Microservice
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+    description: SwaggerHub API Auto Mocking
+paths:
+  /accounts:
+    post:
+      tags:
+        - account
+      summary: Add a new account to the database
+      description: Add a new account to the database
+      operationId: addAccount
+      requestBody:
+        description: Create a new account in the database
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Account'
+        required: true
+      responses:
+        "201":
+          description: Account created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        "405":
+          description: Invalid input
+  /accounts/{id}:
+    put:
+      tags:
+        - account
+      summary: Update an existing account
+      description: Update an existing account by Id
+      operationId: updateAccount
+      parameters:
+        - name: id
+          in: path
+          description: ID of account to update
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Update an existing account in the database
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Account'
+        required: true
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        "400":
+          description: Invalid ID supplied
+        "404":
+          description: Account not found
+        "405":
+          description: Validation exception
+    get:
+      tags:
+        - account
+      summary: Find account by ID
+      description: Returns a single account
+      operationId: getAccountById
+      parameters:
+        - name: id
+          in: path
+          description: ID of account to return
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        "400":
+          description: Invalid ID supplied
+        "404":
+          description: Account not found
+    delete:
+      tags:
+        - account
+      summary: Delete an account
+      description: Delete an account by ID
+      operationId: deleteAccount
+      parameters:
+        - name: id
+          in: path
+          description: Account id to delete
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Delete successful
+        "400":
+          description: Invalid account value
+  /accounts/{id}/deposit:
+    post:
+      tags:
+        - transaction
+      summary: Deposit to an account
+      description: Deposit money into an account
+      operationId: depositToAccount
+      parameters:
+        - name: id
+          in: path
+          description: ID of account to deposit to
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Deposit details
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  type: number
+                  format: double
+                  description: Amount to deposit
+                description:
+                  type: string
+                  description: Description of the deposit
+        required: true
+      responses:
+        "200":
+          description: Deposit successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+  /accounts/{id}/withdraw:
+    post:
+      tags:
+        - transaction
+      summary: Withdraw from an account
+      description: Withdraw money from an account
+      operationId: withdrawFromAccount
+      parameters:
+        - name: id
+          in: path
+          description: ID of account to withdraw from
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Withdrawal details
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  type: number
+                  format: double
+                  description: Amount to withdraw
+                description:
+                  type: string
+                  description: Description of the withdrawal
+        required: true
+      responses:
+        "200":
+          description: Withdrawal successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+  /accounts/{id}/balance:
+    get:
+      tags:
+        - account
+      summary: Get account balance
+      description: Retrieve the balance of an account
+      operationId: getAccountBalance
+      parameters:
+        - name: id
+          in: path
+          description: ID of account to retrieve balance
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  balance:
+                    type: number
+                    format: double
+                    example: 1300.00
+        "404":
+          description: Account not found
+
+  /accounts/{id}/transactions:
+    get:
+      tags:
+        - transaction
+      summary: Get account transactions
+      description: Retrieve transactions of an account
+      operationId: getAccountTransactions
+      parameters:
+        - name: id
+          in: path
+          description: ID of account to retrieve transactions
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Transaction'
+        "404":
+          description: Account not found
+components:
+  schemas:
+    Account:
+      type: object
+      required:
+        - customerId
+        - accountType
+        - balance
+        - maintenanceFee
+        - movementLimit
+      properties:
+        id:
+          type: string
+          readOnly: true
+        customerId:
+          type: string
+          description: ID of the customer who owns the account
+        accountType:
+          type: string
+          description: Type of the account (e.g., savings, checking)
+        balance:
+          type: number
+          format: double
+          description: Current balance of the account
+        maintenanceFee:
+          type: number
+          format: double
+          description: Maintenance fee for the account
+        movementLimit:
+          type: integer
+          description: Limit of movements for the account
+        fixedTermDate:
+          type: string
+          format: date
+          description: Fixed term date for the account
+        holders:
+          type: array
+          items:
+            type: string
+          description: List of account holders
+        authorizedSigners:
+          type: array
+          items:
+            type: string
+          description: List of authorized signers
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation date
+          example: "2024-06-25T20:30:00Z"
+          readOnly: true
+      xml:
+        name: account
+    Transaction:
+      type: object
+      required:
+        - accountId
+        - amount
+        - date
+        - type
+        - description
+      properties:
+        id:
+          type: string
+          readOnly: true
+        accountId:
+          type: string
+          description: ID of the account associated with the transaction
+        amount:
+          type: number
+          format: double
+          description: Amount of the transaction
+        date:
+          type: string
+          format: date-time
+          description: Date and time of the transaction
+        type:
+          type: string
+          description: Type of the transaction (e.g., deposit, withdrawal)
+        description:
+          type: string
+          description: Description of the transaction
+      xml:
+        name: transaction
