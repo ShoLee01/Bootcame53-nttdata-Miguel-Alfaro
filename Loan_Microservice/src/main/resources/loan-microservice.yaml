@@ -203,6 +203,7 @@ components:
         - customerId
         - creditType
         - creditLimit
+        - creditUsageType
         - balance
         - interestRate
         - dueDate
@@ -216,6 +217,10 @@ components:
         creditType:
           type: string
           description: Type of the credit (e.g., personal loan, mortgage)
+        creditUsageType:
+          type: string
+          description: Credit type (personal, business)
+          example: personal
         creditLimit:
           type: number
           format: double

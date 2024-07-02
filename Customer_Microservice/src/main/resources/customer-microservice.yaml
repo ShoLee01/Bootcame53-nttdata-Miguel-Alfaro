@@ -141,7 +141,6 @@ components:
       required:
         - names
         - surnames
-        - type
         - email
         - phone
         - address
@@ -160,10 +159,6 @@ components:
           description: Surnames
           pattern: '^(?=.{3,15}$)[A-ZÁÉÍÓÚ][a-zñáéíóú]+(?: [A-ZÁÉÍÓÚ][a-zñáéíóú]+)?$'
           example: Alfaro Gonzales
-        type:
-          type: string
-          description: Customer type
-          example: personal
         email:
           type: string
           description: email

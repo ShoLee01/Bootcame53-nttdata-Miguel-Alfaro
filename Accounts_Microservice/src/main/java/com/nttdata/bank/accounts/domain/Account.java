@@ -2,14 +2,12 @@ package com.nttdata.bank.accounts.domain;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
 import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import reactor.core.publisher.Flux;
 
-import javax.validation.constraints.NotNull;
 import java.util.Date;
 
 @Getter
@@ -19,9 +17,10 @@ import java.util.Date;
 public class Account {
     @Id
     private String id;
-    @NotNull
     private String customerId;
     private String accountType;
+    private String accountUsageType;
+    private Integer maxTransactions;
     private Double balance;
     private Double maintenanceFee;
     private Integer movementLimit;

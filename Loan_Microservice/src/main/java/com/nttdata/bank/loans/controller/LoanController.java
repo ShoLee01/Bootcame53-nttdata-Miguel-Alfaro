@@ -1,12 +1,11 @@
 package com.nttdata.bank.loans.controller;
 
 import com.nttdata.bank.loans.api.CreditsApi;
+import com.nttdata.bank.loans.error.ApiError;
 import com.nttdata.bank.loans.mapper.*;
 import com.nttdata.bank.loans.model.*;
 import com.nttdata.bank.loans.service.CreditService;
 import com.nttdata.bank.loans.service.TransactionService;
-import lombok.NoArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
@@ -14,31 +13,28 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.Collections;
+
 @RestController
-@NoArgsConstructor
 public class LoanController implements CreditsApi {
 
-    @Autowired
-    private CreditService creditService;
+    private final CreditService creditService;
+    private final TransactionService transactionService;
+    private final CreditMapper creditMapper;
+    private final TransactionMapper transactionMapper;
+    private final ChargeMapper chargeMapper;
+    private final BalanceMapper balanceMapper;
+    private final PaymentMapper paymentMapper;
 
-    @Autowired
-    private TransactionService transactionService;
-
-    @Autowired
-    private CreditMapper creditMapper;
-
-    @Autowired
-    private TransactionMapper transactionMapper;
-
-    @Autowired
-    private ChargeMapper chargeMapper;
-
-    @Autowired
-    private BalanceMapper balanceMapper;
-
-    @Autowired
-    private PaymentMapper paymentMapper;
-
+    public LoanController(CreditService creditService, TransactionService transactionService, CreditMapper creditMapper, TransactionMapper transactionMapper, ChargeMapper chargeMapper, BalanceMapper balanceMapper, PaymentMapper paymentMapper) {
+        this.creditService = creditService;
+        this.transactionService = transactionService;
+        this.creditMapper = creditMapper;
+        this.transactionMapper = transactionMapper;
+        this.chargeMapper = chargeMapper;
+        this.balanceMapper = balanceMapper;
+        this.paymentMapper = paymentMapper;
+    }
 
     @Override
     public Mono<ResponseEntity<Credit>> addCredit(Mono<Credit> credit, ServerWebExchange exchange) {

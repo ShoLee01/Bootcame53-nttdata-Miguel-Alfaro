@@ -204,13 +204,43 @@ paths:
               schema:
                 type: object
                 properties:
-                  balance:
+                  currentBalance:
                     type: number
                     format: double
                     example: 1300.00
         "404":
           description: Account not found
-
+  /accounts/{customerId}/average-daily-balance:
+    get:
+      tags:
+        - account
+      summary: Get average daily balance for the current month
+      description: Retrieve the average daily balance of all accounts for a customer in the current month
+      operationId: getAverageDailyBalance
+      parameters:
+        - name: customerId
+          in: path
+          description: ID of the customer to retrieve the average daily balance
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  customerId:
+                    type: string
+                    example: "12345"
+                  averageBalance:
+                    type: number
+                    format: double
+                    example: 1050.00
+        "404":
+          description: Customer not found
   /accounts/{id}/transactions:
     get:
       tags:
@@ -243,6 +273,7 @@ components:
       required:
         - customerId
         - accountType
+        - accountUsageType
         - balance
         - maintenanceFee
         - movementLimit
@@ -256,6 +287,10 @@ components:
         accountType:
           type: string
           description: Type of the account (e.g., savings, checking)
+        accountUsageType:
+          type: string
+          description: Customer type (personal, business)
+          example: personal
         balance:
           type: number
           format: double
@@ -296,6 +331,7 @@ components:
         - amount
         - date
         - type
+        - currentBalance
         - description
       properties:
         id:
@@ -315,6 +351,10 @@ components:
         type:
           type: string
           description: Type of the transaction (e.g., deposit, withdrawal)
+        currentBalance:
+          type: number
+          format: double
+          description: Current balance of the account
         description:
           type: string
           description: Description of the transaction

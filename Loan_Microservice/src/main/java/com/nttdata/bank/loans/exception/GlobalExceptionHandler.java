@@ -1,7 +1,7 @@
-package com.nttdata.bank.customers.exception;
+package com.nttdata.bank.loans.exception;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nttdata.bank.customers.error.ApiError;
+import com.nttdata.bank.loans.error.ApiError;
 import org.springframework.boot.web.reactive.error.ErrorWebExceptionHandler;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;

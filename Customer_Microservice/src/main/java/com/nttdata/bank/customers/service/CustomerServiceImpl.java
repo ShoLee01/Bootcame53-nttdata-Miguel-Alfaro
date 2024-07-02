@@ -2,19 +2,19 @@ package com.nttdata.bank.customers.service;
 
 import com.nttdata.bank.customers.domain.Customer;
 import com.nttdata.bank.customers.repository.CustomerRepository;
-import lombok.NoArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.util.Date;
 
 @Service
-@NoArgsConstructor
 public class CustomerServiceImpl implements CustomerService{
 
-    @Autowired
-    private CustomerRepository customerRepository;
+    private final CustomerRepository customerRepository;
+
+    public CustomerServiceImpl(CustomerRepository customerRepository) {
+        this.customerRepository = customerRepository;
+    }
 
     @Override
     public Mono<Customer> save(Mono<Customer> customer) {

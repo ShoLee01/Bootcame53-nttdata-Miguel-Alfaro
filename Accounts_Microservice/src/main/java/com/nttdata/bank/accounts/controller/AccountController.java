@@ -1,13 +1,10 @@
 package com.nttdata.bank.accounts.controller;
 
 import com.nttdata.bank.accounts.api.AccountsApi;
-import com.nttdata.bank.accounts.exception.GlobalErrorHandler;
 import com.nttdata.bank.accounts.mapper.*;
 import com.nttdata.bank.accounts.model.*;
 import com.nttdata.bank.accounts.service.AccountService;
 import com.nttdata.bank.accounts.service.TransactionService;
-import lombok.NoArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
@@ -16,37 +13,34 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @RestController
-@NoArgsConstructor
+
 public class AccountController implements AccountsApi {
 
-    @Autowired
-    private AccountService accountService;
+    private final AccountService accountService;
+    private final AccountMapper accountMapper;
+    private final BalanceMapper balanceMapper;
+    private final TransactionService transactionService;
+    private final TransactionMapper transactionMapper;
+    private final DepositMapper depositMapper;
+    private final WithdrawMapper withdrawMapper;
+    private final DailyBalanceSummaryMapper dailyBalanceSummaryMapper;
 
-    @Autowired
-    private AccountMapper accountMapper;
-
-    @Autowired
-    private BalanceMapper balanceMapper;
-
-    @Autowired
-    private TransactionService transactionService;
-
-    @Autowired
-    private TransactionMapper transactionMapper;
-
-    @Autowired
-    private DepositMapper depositMapper;
-
-    @Autowired
-    private WithdrawMapper withdrawMapper;
+    public AccountController(AccountService accountService, AccountMapper accountMapper, BalanceMapper balanceMapper, TransactionService transactionService, TransactionMapper transactionMapper, DepositMapper depositMapper, WithdrawMapper withdrawMapper, DailyBalanceSummaryMapper dailyBalanceSummaryMapper) {
+        this.accountService = accountService;
+        this.accountMapper = accountMapper;
+        this.balanceMapper = balanceMapper;
+        this.transactionService = transactionService;
+        this.transactionMapper = transactionMapper;
+        this.depositMapper = depositMapper;
+        this.withdrawMapper = withdrawMapper;
+        this.dailyBalanceSummaryMapper = dailyBalanceSummaryMapper;
+    }
 
     @Override
     public Mono<ResponseEntity<Account>> addAccount(Mono<Account> account, ServerWebExchange exchange) {
         return accountService.save(account.map(accountMapper::toDomain))
                 .map(accountMapper::toModel)
-                .map(c -> {
-                    return ResponseEntity.status(HttpStatus.CREATED).body(c);
-                });
+                .map(c -> ResponseEntity.status(HttpStatus.CREATED).body(c));
     }
 
     @Override
@@ -61,9 +55,7 @@ public class AccountController implements AccountsApi {
     public Mono<ResponseEntity<Account>> updateAccount(String id, Mono<Account> account, ServerWebExchange exchange) {
         return accountService.update(id, account.map(accountMapper::toDomain))
                 .map(accountMapper::toModel)
-                .map(c -> {
-                    return ResponseEntity.status(HttpStatus.OK).body(c);
-                })
+                .map(c ->ResponseEntity.status(HttpStatus.OK).body(c))
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
@@ -107,6 +99,14 @@ public class AccountController implements AccountsApi {
                 .map(transactionMapper::toModel);
 
         return Mono.just(ResponseEntity.ok(creditsFlux))
+                .defaultIfEmpty(ResponseEntity.notFound().build());
+    }
+
+    @Override
+    public Mono<ResponseEntity<GetAverageDailyBalance200Response>> getAverageDailyBalance(String customerId, ServerWebExchange exchange) {
+        return transactionService.generateDailyBalanceSummary(customerId)
+                .map(dailyBalanceSummaryMapper::toModel)
+                .map(c -> ResponseEntity.status(HttpStatus.OK).body(c))
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 

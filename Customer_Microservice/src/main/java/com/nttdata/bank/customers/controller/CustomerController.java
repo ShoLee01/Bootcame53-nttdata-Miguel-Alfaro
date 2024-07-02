@@ -5,8 +5,6 @@ import com.nttdata.bank.customers.exception.GlobalErrorHandler;
 import com.nttdata.bank.customers.mapper.CustomerMapper;
 import com.nttdata.bank.customers.model.Customer;
 import com.nttdata.bank.customers.service.CustomerService;
-import lombok.NoArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,14 +16,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@NoArgsConstructor
 public class CustomerController implements CustomersApi {
 
-    @Autowired
-    private CustomerService customerService;
+    private final CustomerService customerService;
+    private final CustomerMapper customerMapper;
 
-    @Autowired
-    private CustomerMapper customerMapper;
+    public CustomerController(CustomerService customerService, CustomerMapper customerMapper) {
+        this.customerService = customerService;
+        this.customerMapper = customerMapper;
+    }
 
     @Override
     public Mono<ResponseEntity<Map<String, Object>>> addCustomer(Mono<Customer> customer, ServerWebExchange exchange) {

@@ -8,5 +8,5 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 public class Balance {
-    private Double balance;
+    private Double currentBalance;
 }
