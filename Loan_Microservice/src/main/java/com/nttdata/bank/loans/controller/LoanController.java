@@ -44,9 +44,7 @@ public class LoanController implements CreditsApi {
     public Mono<ResponseEntity<Credit>> addCredit(Mono<Credit> credit, ServerWebExchange exchange) {
         return creditService.save(credit.map(creditMapper::toDomain))
                 .map(creditMapper::toModel)
-                .map(c -> {
-                    return ResponseEntity.status(HttpStatus.CREATED).body(c);
-                });
+                .map(c ->  ResponseEntity.status(HttpStatus.CREATED).body(c));
     }
 
     @Override

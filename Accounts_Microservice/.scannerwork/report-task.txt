@@ -1,0 +1,6 @@
+projectKey=nttdata.bank
+serverUrl=http://localhost:9002
+serverVersion=10.5.1.90531
+dashboardUrl=http://localhost:9002/dashboard?id=nttdata.bank
+ceTaskId=b7c1d4dd-3095-410c-b917-07cf17e9c8c6
+ceTaskUrl=http://localhost:9002/api/ce/task?id=b7c1d4dd-3095-410c-b917-07cf17e9c8c6
