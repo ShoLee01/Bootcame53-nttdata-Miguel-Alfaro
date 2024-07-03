@@ -10,5 +10,5 @@ public interface TransactionService {
     Mono<Transaction> deposit(String accountId, Operation operation);
     Mono<Transaction> withdraw(String accountId, Operation operation);
     Flux<Transaction> getTransactions(String accountId);
-    Mono<DailyBalanceSummary> generateDailyBalanceSummary(String customerId);
+    Flux<DailyBalanceSummary> generateDailyBalanceSummary(String customerId);
 }

@@ -103,10 +103,11 @@ public class AccountController implements AccountsApi {
     }
 
     @Override
-    public Mono<ResponseEntity<GetAverageDailyBalance200Response>> getAverageDailyBalance(String customerId, ServerWebExchange exchange) {
-        return transactionService.generateDailyBalanceSummary(customerId)
-                .map(dailyBalanceSummaryMapper::toModel)
-                .map(c -> ResponseEntity.status(HttpStatus.OK).body(c))
+    public Mono<ResponseEntity<Flux<AverageDailyBalanceSummary>>> getAverageDailyBalance(String customerId, ServerWebExchange exchange) {
+        Flux<AverageDailyBalanceSummary> creditsFlux = transactionService.generateDailyBalanceSummary(customerId)
+                .map(dailyBalanceSummaryMapper::toModel);
+
+        return Mono.just(ResponseEntity.ok(creditsFlux))
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 

@@ -230,15 +230,9 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  customerId:
-                    type: string
-                    example: "12345"
-                  averageBalance:
-                    type: number
-                    format: double
-                    example: 1050.00
+                type: array
+                items:
+                  $ref: '#/components/schemas/AverageDailyBalanceSummary'
         "404":
           description: Customer not found
   /accounts/{id}/transactions:
@@ -350,7 +344,7 @@ components:
           description: Date and time of the transaction
         type:
           type: string
-          description: Type of the transaction (e.g., deposit, withdrawal)
+          description: Type of the transaction (deposit, withdrawal)
         currentBalance:
           type: number
           format: double
@@ -360,3 +354,21 @@ components:
           description: Description of the transaction
       xml:
         name: transaction
+    AverageDailyBalanceSummary:
+      type: object
+      properties:
+        accountId:
+          type: string
+          description: ID of the account
+        accountType:
+          type: string
+          description: Type of account (personal, empresarial)
+        accountUsageType:
+          type: string
+          description: Type of usage of the account (ahorro, cuenta corriente)
+        averageDailyBalance:
+          type: number
+          format: double
+          description: Average daily balance for the current month
+      xml:
+        name: averageDailyBalanceSummary

@@ -20,7 +20,6 @@ public class Account {
     private String customerId;
     private String accountType;
     private String accountUsageType;
-    private Integer maxTransactions;
     private Double balance;
     private Double maintenanceFee;
     private Integer movementLimit;

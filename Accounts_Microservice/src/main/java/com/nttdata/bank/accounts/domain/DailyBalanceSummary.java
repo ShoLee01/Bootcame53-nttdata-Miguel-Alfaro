@@ -8,11 +8,15 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 public class DailyBalanceSummary {
-    private String customerId;
-    private Double averageBalance;
+    private String accountId;
+    private String accountType;
+    private String accountUsageType;
+    private Double averageDailyBalance;
 
-    public DailyBalanceSummary(String customerId, Double averageBalance) {
-        this.customerId = customerId;
-        this.averageBalance = averageBalance;
+    public DailyBalanceSummary(String accountId, String accountType, String accountUsageType, Double averageDailyBalance) {
+        this.accountId = accountId;
+        this.accountType = accountType;
+        this.accountUsageType = accountUsageType;
+        this.averageDailyBalance = averageDailyBalance;
     }
 }

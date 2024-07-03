@@ -1,5 +1,6 @@
 package com.nttdata.bank.accounts.service;
 
+import com.nttdata.bank.accounts.domain.Account;
 import com.nttdata.bank.accounts.domain.DailyBalanceSummary;
 import com.nttdata.bank.accounts.domain.Operation;
 import com.nttdata.bank.accounts.domain.Transaction;
@@ -10,10 +11,11 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import javax.security.auth.login.AccountNotFoundException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
 
 @Service
 public class TransactionServiceImpl implements TransactionService{
@@ -101,42 +103,60 @@ public class TransactionServiceImpl implements TransactionService{
     }
 
     @Override
-    public Mono<DailyBalanceSummary> generateDailyBalanceSummary(String customerId) {
+    public Flux<DailyBalanceSummary> generateDailyBalanceSummary(String customerId) {
+        // Obtener el primer día del mes en curso
+        LocalDate startOfMonth = LocalDate.now().withDayOfMonth(1);
+        LocalDate endOfMonth = LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth());
+        // Encontrar todas las cuentas del cliente y calcular el saldo promedio diario para cada una
         return accountRepository.findByCustomerId(customerId)
-                .collectList()
-                .flatMapMany(accounts -> Flux.fromIterable(accounts)
-                        .flatMap(account -> transactionRepository.findByAccountId(account.getId())))
-                .collectList()
-                .flatMap(this::calculateDailyAverages)
-                .map(averageBalance -> new DailyBalanceSummary(customerId, averageBalance));
+                .flatMap(account -> calculateAverageDailyBalance(account, startOfMonth, endOfMonth));
     }
 
-    private Mono<Double> calculateDailyAverages(List<Transaction> transactions) {
-        if (transactions.isEmpty()) {
-            return Mono.just(0.0);
-        }
+    private Flux<DailyBalanceSummary> calculateAverageDailyBalance(Account account, LocalDate startOfMonth, LocalDate endOfMonth) {
+        // Convertir las fechas de inicio y fin del mes a objetos Date
+        Date startDate = Date.from(startOfMonth.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        Date endDate = Date.from(endOfMonth.atStartOfDay(ZoneId.systemDefault()).toInstant());
 
-        // Log the transactions to check for null dates
-        transactions.forEach(transaction -> {
-            System.out.println("Transaction ID: " + transaction.getId() + ", Date: " + transaction.getDate());
-        });
-        transactions.sort(Comparator.comparing(Transaction::getDate));
-        LocalDate startDate = transactions.get(0).getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate().withDayOfMonth(1);
-        LocalDate endDate = LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth());
-        Map<LocalDate, Double> dailyBalances = new LinkedHashMap<>();
-        AtomicReference<Double> previousBalance = new AtomicReference<>(transactions.get(0).getCurrentBalance());
-        for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
-            double finalPreviousBalance = previousBalance.get();
-            LocalDate finalDate = date;
-            transactions.stream()
-                    .filter(t -> t.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate().isEqual(finalDate))
-                    .forEach(t -> previousBalance.set(t.getCurrentBalance()));
-            dailyBalances.put(date, finalPreviousBalance);
-        }
+        // Encontrar todas las transacciones de la cuenta dentro del rango de fechas
+        return transactionRepository.findByAccountIdAndDateBetween(account.getId(), startDate, endDate)
+                .collectList()
+                .flatMapMany(transactions -> {
+                    // Mapa para almacenar los saldos diarios
+                    Map<LocalDate, Double> dailyBalances = new HashMap<>();
+                    // Obtener el saldo actual de la cuenta
+                    Double currentBalance = account.getBalance();
+                    // Fecha actual comenzando desde el último día del mes
+                    LocalDate currentDate = endOfMonth;
 
-        double totalBalance = dailyBalances.values().stream().mapToDouble(Double::doubleValue).sum();
-        double averageBalance = totalBalance / dailyBalances.size();
+                    // Añadir el saldo actual al mapa de saldos diarios
+                    dailyBalances.put(currentDate, currentBalance);
 
-        return Mono.just(averageBalance);
+                    // Iterar sobre las transacciones para actualizar los saldos diarios
+                    for (Transaction transaction : transactions) {
+                        LocalDate transactionDate = transaction.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+                        while (!currentDate.isEqual(transactionDate)) {
+                            dailyBalances.put(currentDate, currentBalance);
+                            currentDate = currentDate.minusDays(1);
+                        }
+                        currentBalance = transaction.getCurrentBalance();
+                    }
+
+                    // Rellenar los días restantes si es necesario
+                    while (!currentDate.isBefore(startOfMonth)) {
+                        dailyBalances.put(currentDate, currentBalance);
+                        currentDate = currentDate.minusDays(1);
+                    }
+
+                    // Calcular el saldo promedio diario
+                    double sumBalances = dailyBalances.values().stream().mapToDouble(Double::doubleValue).sum();
+                    double averageDailyBalance = sumBalances / dailyBalances.size();
+                    // Redondear a dos decimales
+                    BigDecimal roundedAverage = BigDecimal.valueOf(averageDailyBalance).setScale(2, RoundingMode.HALF_UP);
+
+                    // Crear el resumen para esta cuenta
+                    DailyBalanceSummary summary = new DailyBalanceSummary(account.getId(), account.getAccountType() ,account.getAccountUsageType(), roundedAverage.doubleValue());
+                    return Flux.just(summary);
+                });
     }
+
 }
