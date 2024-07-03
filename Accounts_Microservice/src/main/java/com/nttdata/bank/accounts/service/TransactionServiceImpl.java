@@ -67,20 +67,22 @@ public class TransactionServiceImpl implements TransactionService{
                 .switchIfEmpty(Mono.error(new AccountNotFoundException(accountId)))
                 .flatMap(account -> transactionRepository.findByAccountId(accountId).count()
                         .flatMap(transactionCount -> {
+                            // Almacenamos el withdrawAmount que se descontará de la cuenta
                             double[] withdrawAmount = {operation.getAmount()};
 
-                            if (withdrawAmount[0] < CHARGE_AMOUNT) {
-                                return Mono.error(new RuntimeException("The withdrawal amount cannot be less than " + CHARGE_AMOUNT + " soles"));
+                            // Vemos si tiene el saldo disponible
+                            // Vemos si se supero el límite se transacciones y tiene suficiente saldo para pagar la comisióm
+                            if (account.getBalance() < withdrawAmount[0] ||
+                                    transactionCount >= account.getMovementLimit() &&
+                                            withdrawAmount[0] + CHARGE_AMOUNT > account.getBalance()) {
+                                return Mono.error(new RuntimeException("You do not have enough funds"));
                             }
 
-
+                            // Se le agrega al retiro la comisión
                             if (transactionCount >= account.getMovementLimit()) {
                                 withdrawAmount[0] += CHARGE_AMOUNT;
                             }
 
-                            if (account.getBalance() < withdrawAmount[0]) {
-                                return Mono.error(new RuntimeException("You do not have enough funds"));
-                            }
                             account.setBalance(account.getBalance() - withdrawAmount[0]);
                             return accountRepository.save(account)
                                     .then(Mono.defer(() -> {
