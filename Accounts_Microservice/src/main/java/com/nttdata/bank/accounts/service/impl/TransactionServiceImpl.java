@@ -1,4 +1,4 @@
-package com.nttdata.bank.accounts.service;
+package com.nttdata.bank.accounts.service.impl;
 
 import com.nttdata.bank.accounts.domain.Account;
 import com.nttdata.bank.accounts.domain.DailyBalanceSummary;
@@ -6,6 +6,7 @@ import com.nttdata.bank.accounts.domain.Operation;
 import com.nttdata.bank.accounts.domain.Transaction;
 import com.nttdata.bank.accounts.repository.AccountRepository;
 import com.nttdata.bank.accounts.repository.TransactionRepository;
+import com.nttdata.bank.accounts.service.TransactionService;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -18,7 +19,7 @@ import java.time.ZoneId;
 import java.util.*;
 
 @Service
-public class TransactionServiceImpl implements TransactionService{
+public class TransactionServiceImpl implements TransactionService {
 
 
     private final AccountRepository accountRepository;
@@ -38,6 +39,7 @@ public class TransactionServiceImpl implements TransactionService{
                 .flatMap(account -> transactionRepository.findByAccountId(accountId).count()
                         .flatMap(transactionCount -> {
                             double[] depositAmount = {operation.getAmount()};
+                            double[] bankCommission = {0.0};
 
                             if (depositAmount[0] < CHARGE_AMOUNT) {
                                 return Mono.error(new RuntimeException("The deposit cannot be less than " + CHARGE_AMOUNT + " soles"));
@@ -45,6 +47,7 @@ public class TransactionServiceImpl implements TransactionService{
 
                             if (transactionCount >= account.getMovementLimit()) {
                                 depositAmount[0] -= CHARGE_AMOUNT;
+                                bankCommission[0] = CHARGE_AMOUNT;
                             }
                             account.setBalance(account.getBalance() + depositAmount[0]);
                             return accountRepository.save(account)
@@ -52,6 +55,7 @@ public class TransactionServiceImpl implements TransactionService{
                                         Transaction transaction = new Transaction();
                                         transaction.setAccountId(accountId);
                                         transaction.setAmount(depositAmount[0]);
+                                        transaction.setCommission(bankCommission[0]);
                                         transaction.setDate(new Date());
                                         transaction.setCurrentBalance(account.getBalance() + depositAmount[0]);
                                         transaction.setType("deposit");
@@ -69,6 +73,7 @@ public class TransactionServiceImpl implements TransactionService{
                         .flatMap(transactionCount -> {
                             // Almacenamos el withdrawAmount que se descontará de la cuenta
                             double[] withdrawAmount = {operation.getAmount()};
+                            double[] bankCommission = {0.0};
 
                             // Vemos si tiene el saldo disponible
                             // Vemos si se supero el límite se transacciones y tiene suficiente saldo para pagar la comisióm
@@ -81,6 +86,7 @@ public class TransactionServiceImpl implements TransactionService{
                             // Se le agrega al retiro la comisión
                             if (transactionCount >= account.getMovementLimit()) {
                                 withdrawAmount[0] += CHARGE_AMOUNT;
+                                bankCommission[0] = CHARGE_AMOUNT;
                             }
 
                             account.setBalance(account.getBalance() - withdrawAmount[0]);
@@ -90,6 +96,7 @@ public class TransactionServiceImpl implements TransactionService{
                                         transaction.setAccountId(accountId);
                                         transaction.setAmount(operation.getAmount());
                                         transaction.setDate(new Date());
+                                        transaction.setCommission(bankCommission[0]);
                                         transaction.setCurrentBalance(account.getBalance());
                                         transaction.setType("withdraw");
                                         transaction.setDescription(operation.getDescription());

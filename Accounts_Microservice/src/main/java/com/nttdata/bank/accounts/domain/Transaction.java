@@ -20,5 +20,6 @@ public class Transaction {
     private Date date;
     private String type;
     private Double currentBalance;
+    private Double commission;
     private String description;
 }

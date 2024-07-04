@@ -1,8 +1,9 @@
-package com.nttdata.bank.accounts.service;
+package com.nttdata.bank.accounts.service.impl;
 
 import com.nttdata.bank.accounts.domain.Account;
 import com.nttdata.bank.accounts.domain.Balance;
 import com.nttdata.bank.accounts.repository.AccountRepository;
+import com.nttdata.bank.accounts.service.AccountService;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
