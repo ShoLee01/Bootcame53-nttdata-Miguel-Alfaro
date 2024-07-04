@@ -142,6 +142,31 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Transaction'
+  /credits/{customerId}/average-daily-balance:
+    get:
+      tags:
+        - credit
+      summary: Get average daily balance for the current month
+      description: Retrieve the average daily balance of all credits for a customer in the current month
+      operationId: getAverageDailyBalance
+      parameters:
+        - name: customerId
+          in: path
+          description: ID of the customer to retrieve the average daily balance
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AverageDailyBalanceSummary'
+        "404":
+          description: Customer not found
   /credits/{id}/balance:
     get:
       tags:
@@ -201,7 +226,7 @@ components:
       type: object
       required:
         - customerId
-        - creditType
+        - productId
         - creditLimit
         - creditUsageType
         - balance
@@ -214,9 +239,9 @@ components:
         customerId:
           type: string
           description: ID of the customer who owns the credit
-        creditType:
+        productId:
           type: string
-          description: Type of the credit (e.g., personal loan, mortgage)
+          description: ID of credit products
         creditUsageType:
           type: string
           description: Credit type (personal, business)
@@ -252,6 +277,9 @@ components:
         - amount
         - date
         - type
+        - currentBalance
+        - commission
+        - productId
         - description
       properties:
         id:
@@ -270,9 +298,38 @@ components:
           description: Date and time of the transaction
         type:
           type: string
-          description: Type of the transaction (e.g., payment, charge)
+          description: Type of the transaction (payment, charge)
+        currentBalance:
+          type: number
+          format: double
+          description: Current balance of the account
+        commission:
+          type: number
+          format: double
+          description: Bank Commission
+        productId:
+          type: string
+          description: ID of credit products
         description:
           type: string
           description: Description of the transaction
       xml:
         name: transaction
+    AverageDailyBalanceSummary:
+      type: object
+      properties:
+        creditId:
+          type: string
+          description: ID of the credit
+        productId:
+          type: string
+          description: ID of the Credit Product
+        creditUsageType:
+          type: string
+          description: Type of account (personal, empresarial)
+        averageDailyBalance:
+          type: number
+          format: double
+          description: Average daily balance for the current month
+      xml:
+        name: averageDailyBalanceSummary

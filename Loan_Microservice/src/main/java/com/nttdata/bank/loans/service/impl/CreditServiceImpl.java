@@ -1,8 +1,9 @@
-package com.nttdata.bank.loans.service;
+package com.nttdata.bank.loans.service.impl;
 
 import com.nttdata.bank.loans.domain.Balance;
 import com.nttdata.bank.loans.domain.Credit;
 import com.nttdata.bank.loans.repository.CreditRepository;
+import com.nttdata.bank.loans.service.CreditService;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;

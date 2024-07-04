@@ -15,7 +15,7 @@ public class Credit {
     @Id
     private String id;
     private String customerId;
-    private String creditType;
+    private String productId;
     private String creditUsageType;
     private Double creditLimit;
     private Double balance;

@@ -367,10 +367,10 @@ components:
           description: ID of the account
         accountType:
           type: string
-          description: Type of account (personal, empresarial)
+          description: Type of usage of the account (ahorro, cuenta corriente)
         accountUsageType:
           type: string
-          description: Type of usage of the account (ahorro, cuenta corriente)
+          description: Type of account (personal, empresarial)
         averageDailyBalance:
           type: number
           format: double

@@ -19,5 +19,8 @@ public class Transaction {
     private Double amount;
     private Date date;
     private String type;
+    private Double currentBalance;
+    private Double commission;
+    private String productId;
     private String description;
 }

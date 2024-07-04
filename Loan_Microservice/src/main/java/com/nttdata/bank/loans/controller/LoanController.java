@@ -1,7 +1,6 @@
 package com.nttdata.bank.loans.controller;
 
 import com.nttdata.bank.loans.api.CreditsApi;
-import com.nttdata.bank.loans.error.ApiError;
 import com.nttdata.bank.loans.mapper.*;
 import com.nttdata.bank.loans.model.*;
 import com.nttdata.bank.loans.service.CreditService;
@@ -13,7 +12,6 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.Collections;
 
 @RestController
 public class LoanController implements CreditsApi {
@@ -25,8 +23,9 @@ public class LoanController implements CreditsApi {
     private final ChargeMapper chargeMapper;
     private final BalanceMapper balanceMapper;
     private final PaymentMapper paymentMapper;
+    private final DailyBalanceSummaryMapper dailyBalanceSummaryMapper;
 
-    public LoanController(CreditService creditService, TransactionService transactionService, CreditMapper creditMapper, TransactionMapper transactionMapper, ChargeMapper chargeMapper, BalanceMapper balanceMapper, PaymentMapper paymentMapper) {
+    public LoanController(CreditService creditService, TransactionService transactionService, CreditMapper creditMapper, TransactionMapper transactionMapper, ChargeMapper chargeMapper, BalanceMapper balanceMapper, PaymentMapper paymentMapper, DailyBalanceSummaryMapper dailyBalanceSummaryMapper) {
         this.creditService = creditService;
         this.transactionService = transactionService;
         this.creditMapper = creditMapper;
@@ -34,6 +33,7 @@ public class LoanController implements CreditsApi {
         this.chargeMapper = chargeMapper;
         this.balanceMapper = balanceMapper;
         this.paymentMapper = paymentMapper;
+        this.dailyBalanceSummaryMapper = dailyBalanceSummaryMapper;
     }
 
     @Override
@@ -41,6 +41,15 @@ public class LoanController implements CreditsApi {
         return creditService.save(credit.map(creditMapper::toDomain))
                 .map(creditMapper::toModel)
                 .map(c ->  ResponseEntity.status(HttpStatus.CREATED).body(c));
+    }
+
+    @Override
+    public Mono<ResponseEntity<Flux<AverageDailyBalanceSummary>>> getAverageDailyBalance(String customerId, ServerWebExchange exchange) {
+        Flux<AverageDailyBalanceSummary> creditsFlux = transactionService.generateDailyBalanceSummary(customerId)
+                .map(dailyBalanceSummaryMapper::toModel);
+
+        return Mono.just(ResponseEntity.ok(creditsFlux))
+                .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
     @Override
