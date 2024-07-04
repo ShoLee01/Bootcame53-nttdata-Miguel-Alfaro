@@ -12,7 +12,6 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-
 @RestController
 public class LoanController implements CreditsApi {
 
@@ -24,8 +23,12 @@ public class LoanController implements CreditsApi {
     private final BalanceMapper balanceMapper;
     private final PaymentMapper paymentMapper;
     private final DailyBalanceSummaryMapper dailyBalanceSummaryMapper;
+    private final CommissionReportMapper commissionReportMapper;
 
-    public LoanController(CreditService creditService, TransactionService transactionService, CreditMapper creditMapper, TransactionMapper transactionMapper, ChargeMapper chargeMapper, BalanceMapper balanceMapper, PaymentMapper paymentMapper, DailyBalanceSummaryMapper dailyBalanceSummaryMapper) {
+    public LoanController(CreditService creditService, TransactionService transactionService, CreditMapper creditMapper,
+                          TransactionMapper transactionMapper, ChargeMapper chargeMapper, BalanceMapper balanceMapper,
+                          PaymentMapper paymentMapper, DailyBalanceSummaryMapper dailyBalanceSummaryMapper,
+                          CommissionReportMapper commissionReportMapper) {
         this.creditService = creditService;
         this.transactionService = transactionService;
         this.creditMapper = creditMapper;
@@ -34,6 +37,7 @@ public class LoanController implements CreditsApi {
         this.balanceMapper = balanceMapper;
         this.paymentMapper = paymentMapper;
         this.dailyBalanceSummaryMapper = dailyBalanceSummaryMapper;
+        this.commissionReportMapper = commissionReportMapper;
     }
 
     @Override
@@ -47,6 +51,15 @@ public class LoanController implements CreditsApi {
     public Mono<ResponseEntity<Flux<AverageDailyBalanceSummary>>> getAverageDailyBalance(String customerId, ServerWebExchange exchange) {
         Flux<AverageDailyBalanceSummary> creditsFlux = transactionService.generateDailyBalanceSummary(customerId)
                 .map(dailyBalanceSummaryMapper::toModel);
+
+        return Mono.just(ResponseEntity.ok(creditsFlux))
+                .defaultIfEmpty(ResponseEntity.notFound().build());
+    }
+
+    @Override
+    public Mono<ResponseEntity<Flux<CommissionReport>>> getCommissionReport(String startDate, String endDate, ServerWebExchange exchange) {
+        Flux<CommissionReport> creditsFlux = transactionService.generateCommissionReport(startDate,endDate)
+                .map(commissionReportMapper::toModel);
 
         return Mono.just(ResponseEntity.ok(creditsFlux))
                 .defaultIfEmpty(ResponseEntity.notFound().build());

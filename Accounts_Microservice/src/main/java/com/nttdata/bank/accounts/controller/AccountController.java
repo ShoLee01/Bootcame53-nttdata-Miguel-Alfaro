@@ -110,5 +110,4 @@ public class AccountController implements AccountsApi {
         return Mono.just(ResponseEntity.ok(creditsFlux))
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
-
 }

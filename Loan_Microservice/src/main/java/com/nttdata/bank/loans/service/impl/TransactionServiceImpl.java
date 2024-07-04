@@ -1,25 +1,24 @@
 package com.nttdata.bank.loans.service.impl;
 
-import com.nttdata.bank.loans.domain.Credit;
-import com.nttdata.bank.loans.domain.DailyBalanceSummary;
-import com.nttdata.bank.loans.domain.Operation;
-import com.nttdata.bank.loans.domain.Transaction;
+import com.nttdata.bank.loans.domain.*;
 import com.nttdata.bank.loans.repository.CreditRepository;
 import com.nttdata.bank.loans.repository.TransactionRepository;
 import com.nttdata.bank.loans.service.TransactionService;
-import lombok.NoArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 @Service
 public class TransactionServiceImpl implements TransactionService {
@@ -28,6 +27,8 @@ public class TransactionServiceImpl implements TransactionService {
     private final TransactionRepository transactionRepository;
 
     private static final double CHARGE_AMOUNT = 5.0;
+    private static final String DATE_FORMAT = "dd/MM/yyyy";
+    private static final Pattern DATE_PATTERN = Pattern.compile("\\d{2}/\\d{2}/\\d{4}");
 
     public TransactionServiceImpl(CreditRepository creditRepository, TransactionRepository transactionRepository) {
         this.creditRepository = creditRepository;
@@ -146,6 +147,59 @@ public class TransactionServiceImpl implements TransactionService {
                     DailyBalanceSummary summary = new DailyBalanceSummary(account.getId(), account.getProductId() ,account.getCreditUsageType(), roundedAverage.doubleValue());
                     return Flux.just(summary);
                 });
+    }
+
+    @Override
+    public Flux<CommissionReport> generateCommissionReport(String startDateStr, String endDateStr) {
+        return validateAndParseDate(startDateStr)
+                .zipWith(validateAndParseDate(endDateStr))
+                .flatMapMany(dates -> {
+                    // De la tupla 1
+                    Date startDate = dates.getT1();
+                    // De la tupla 2
+                    Date endDate = adjustEndDate(dates.getT2());
+
+                    // Validar que la fecha de inicio no sea mayor que la fecha de fin
+                    if (startDate.after(endDate)) {
+                        return Flux.error(new IllegalArgumentException("The start date cannot be later than the end date."));
+                    }
+
+                    // Obtener las transacciones en el rango de fechas
+                    return transactionRepository.findByDateBetween(startDate, endDate)
+                            .filter(transaction -> transaction.getCommission() != null)
+                            .groupBy(Transaction::getProductId) // Agrupar por producto
+                            .flatMap(groupedFlux -> groupedFlux
+                                    .collectList()
+                                    .map(transactions -> {
+                                        String productId = groupedFlux.key();
+                                        Double totalCommission = transactions.stream()
+                                                .mapToDouble(Transaction::getCommission)
+                                                .sum();
+                                        return new CommissionReport(productId, totalCommission);
+                                    })
+                            );
+                });
+    }
+
+    private Mono<Date> validateAndParseDate(String dateStr) {
+        // Validar el formato de la fecha
+        if (!DATE_PATTERN.matcher(dateStr).matches()) {
+            return Mono.error(new IllegalArgumentException("The dates must be in the format DD/MM/YYYY"));
+        }
+
+        try {
+            SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
+            Date date = dateFormat.parse(dateStr);
+            return Mono.just(date);
+        } catch (ParseException e) {
+            return Mono.error(new IllegalArgumentException("Error parsing the dates"));
+        }
+    }
+    // Par incluir a la misma fecha limite que se esta buscado por ejmplo si se busca hasta el 5 de agosto que tambien te salgan todas las de 5 de ese dia
+    private Date adjustEndDate(Date endDate) {
+        LocalDateTime endDateTime = LocalDateTime.ofInstant(endDate.toInstant(), ZoneId.systemDefault());
+        endDateTime = endDateTime.withHour(23).withMinute(59).withSecond(59).withNano(999999999);
+        return Date.from(endDateTime.atZone(ZoneId.systemDefault()).toInstant());
     }
 
 }
